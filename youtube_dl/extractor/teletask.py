@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import re
 import json
 
 from .common import InfoExtractor
@@ -68,11 +67,18 @@ class TeleTaskIE(InfoExtractor):
         entry_dict = {}
         for stream_group in player_info["streams"]:
             for stream_type, video_url in stream_group.items():
-                content_type, url_type = re.findall(
-                    r'\/([^\/]+)\.(mp4|m3u8)$', video_url)[0]
+                url_expression = r'^https?:\/\/\S+\/(?P<content_type>[^\/]+)\.(?P<file_type>mp4|m3u8)$'
+                content_type = self._search_regex(
+                    url_expression,
+                    video_url,
+                    'content_type', group='content_type')
+                file_type = self._search_regex(
+                    url_expression,
+                    video_url,
+                    'file_type', group='file_type')
                 if content_type not in entry_dict.keys():
                     entry_dict[content_type] = []
-                if url_type == 'mp4':
+                if file_type == 'mp4':
                     entry_dict[content_type].append({
                         'url': video_url,
                         'format_id': stream_type
